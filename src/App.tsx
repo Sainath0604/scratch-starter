@@ -12,6 +12,17 @@ const App: React.FC = () => {
     await repeat(count, () => move(1));
   };
 
+  const handleRepeatAction = async (
+    type: "move" | "turn",
+    value: number,
+    count: number
+  ) => {
+    await repeat(count, () => {
+      if (type === "move") move(value);
+      else turn(value);
+    });
+  };
+
   return (
     <div className="bg-blue-100 font-sans">
       <div className="h-screen overflow-hidden flex flex-row pt-6">
@@ -25,6 +36,7 @@ const App: React.FC = () => {
             onTurnAnti={turnAnti}
             onGoTo={goTo}
             onRepeat={handleRepeat}
+            onRepeatAction={handleRepeatAction}
           />
           <MidArea />
         </div>

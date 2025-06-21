@@ -1,9 +1,5 @@
 import { useState, useRef } from "react";
-
-interface Position {
-  x: number;
-  y: number;
-}
+import { Block, Position } from "./types";
 
 export const useSpriteMotion = () => {
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
@@ -50,6 +46,24 @@ export const useSpriteMotion = () => {
     for (let i = 0; i < count; i++) {
       action();
       await new Promise((res) => setTimeout(res, delay));
+    }
+  };
+
+  const runBlock = async (block: Block) => {
+    switch (block.type) {
+      case "move":
+        await move(block.args.steps);
+        break;
+      case "turn":
+        await turn(block.args.degrees);
+        break;
+      case "repeat":
+        for (let i = 0; i < block.args.times; i++) {
+          for (const child of block.children || []) {
+            await runBlock(child);
+          }
+        }
+        break;
     }
   };
 
