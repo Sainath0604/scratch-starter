@@ -4,6 +4,7 @@ import MoveBlock from "./blocks/MoveBlock";
 import TurnBlock from "./blocks/TurnBlock";
 import GoToBlock from "./blocks/GoToBlock";
 import RepeatBlock from "./blocks/RepeatBlock";
+import SayThinkBlock from "./blocks/SayThinkBlock";
 
 interface SidebarProps {
   onMove: (steps: number) => void;
@@ -12,6 +13,8 @@ interface SidebarProps {
   onGoTo: (x: number, y: number) => void;
   onRepeat: (count: number) => void;
   onRepeatAction: (type: "move" | "turn", value: number, count: number) => void;
+  onSay: (msg: string, seconds: number) => void;
+  onThink: (msg: string, seconds: number) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -20,6 +23,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onTurnAnti,
   onGoTo,
   onRepeatAction,
+  onSay,
+  onThink,
 }) => {
   const [stepCount, setStepCount] = useState(10);
   const [clockwiseDegrees, setClockwiseDegrees] = useState(15);
@@ -29,6 +34,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [repeatCount, setRepeatCount] = useState(5);
   const [repeatType, setRepeatType] = useState<"move" | "turn">("move");
   const [repeatValue, setRepeatValue] = useState(10);
+  const [sayText, setSayText] = useState("Hello!");
+  const [saySeconds, setSaySeconds] = useState(2);
+  const [thinkText, setThinkText] = useState("Hmm...");
+  const [thinkSeconds, setThinkSeconds] = useState(2);
+
+  const handleSay = () => onSay(sayText, saySeconds);
+  const handleThink = () => onThink(thinkText, thinkSeconds);
 
   return (
     <div className="w-60 flex-none h-full overflow-y-auto flex flex-col items-start p-2 border-r border-gray-200">
@@ -81,6 +93,24 @@ const Sidebar: React.FC<SidebarProps> = ({
         onChangeType={setRepeatType}
         onChangeValue={setRepeatValue}
         onRun={() => onRepeatAction(repeatType, repeatValue, repeatCount)}
+      />
+
+      <div className="font-bold mt-4">Looks</div>
+      <SayThinkBlock
+        type="say"
+        message={sayText}
+        seconds={saySeconds}
+        onMessageChange={setSayText}
+        onSecondsChange={setSaySeconds}
+        onRun={handleSay}
+      />
+      <SayThinkBlock
+        type="think"
+        message={thinkText}
+        seconds={thinkSeconds}
+        onMessageChange={setThinkText}
+        onSecondsChange={setThinkSeconds}
+        onRun={handleThink}
       />
     </div>
   );

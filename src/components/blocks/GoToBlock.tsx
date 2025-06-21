@@ -16,15 +16,15 @@ const GoToBlock: React.FC<GoToBlockProps> = ({
   onChangeY,
   onClick,
 }) => (
-  <BlockWrapper color="bg-purple-500">
-    <span onClick={onClick}>
+  <BlockWrapper color="bg-blue-500">
+    <span className="flex" onClick={onClick}>
       Go to x:
       <input
         type="number"
         value={x}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => onChangeX(Number(e.target.value))}
-        className="w-14 mx-2 text-black text-center rounded-sm"
+        className="w-10 mx-2 text-black text-center rounded-sm"
       />
       y:
       <input
@@ -32,7 +32,7 @@ const GoToBlock: React.FC<GoToBlockProps> = ({
         value={y}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => onChangeY(Number(e.target.value))}
-        className="w-14 mx-2 text-black text-center rounded-sm"
+        className="w-10 mx-2 text-black text-center rounded-sm"
       />
     </span>
   </BlockWrapper>

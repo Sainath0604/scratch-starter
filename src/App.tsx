@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
@@ -7,6 +7,11 @@ import { useSpriteMotion } from "./hooks/useSpriteMotion";
 const App: React.FC = () => {
   const { position, rotation, move, turn, turnAnti, goTo, repeat, previewRef } =
     useSpriteMotion();
+
+  const [bubble, setBubble] = useState<null | {
+    type: "say" | "think";
+    text: string;
+  }>(null);
 
   const handleRepeat = async (count: number) => {
     await repeat(count, () => move(1));
@@ -23,6 +28,16 @@ const App: React.FC = () => {
     });
   };
 
+  const handleSay = (msg: string, seconds: number) => {
+    setBubble({ type: "say", text: msg });
+    setTimeout(() => setBubble(null), seconds * 1000);
+  };
+
+  const handleThink = (msg: string, seconds: number) => {
+    setBubble({ type: "think", text: msg });
+    setTimeout(() => setBubble(null), seconds * 1000);
+  };
+
   return (
     <div className="bg-blue-100 font-sans">
       <div className="h-screen overflow-hidden flex flex-row pt-6">
@@ -37,6 +52,8 @@ const App: React.FC = () => {
             onGoTo={goTo}
             onRepeat={handleRepeat}
             onRepeatAction={handleRepeatAction}
+            onSay={handleSay}
+            onThink={handleThink}
           />
           <MidArea />
         </div>
@@ -45,7 +62,12 @@ const App: React.FC = () => {
         border-gray-200 rounded-tl-xl ml-2"
           ref={previewRef}
         >
-          <PreviewArea x={position.x} y={position.y} rotation={rotation} />
+          <PreviewArea
+            x={position.x}
+            y={position.y}
+            rotation={rotation}
+            bubble={bubble}
+          />
         </div>
       </div>
     </div>
