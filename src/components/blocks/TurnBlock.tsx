@@ -1,6 +1,6 @@
 import React from "react";
-import Icon from "../Icon";
 import BlockWrapper from "./BlockWrapper";
+import Icon from "../Icon";
 
 interface TurnBlockProps {
   label: string;
