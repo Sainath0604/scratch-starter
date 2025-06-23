@@ -16,10 +16,31 @@ export const executeAction = (
       return {
         rotation: sprite.rotation + action.value,
       };
+    case "goTo":
+      return { ...sprite, x: action.x, y: action.y };
     case "say":
       return {
         bubble: { type: "say", text: action.value },
       };
+    case "think":
+      return {
+        bubble: { type: "think", text: action.value },
+      };
+    // case "repeat":
+    //   let current: Partial<SpriteState> = { ...sprite };
+    //   for (let i = 0; i < action.count; i++) {
+    //     const result = executeAction(current as SpriteState, action.action);
+    //     current = { ...current, ...result };
+    //   }
+    //   return current;
+    case "repeat":
+      let current = { ...sprite };
+      for (let i = 0; i < action.count; i++) {
+        const result = executeAction(current, action.action);
+        current = { ...current, ...result };
+      }
+      return current;
+
     default:
       return {};
   }

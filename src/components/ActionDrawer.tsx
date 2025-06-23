@@ -7,6 +7,7 @@ import TurnBlock from "./blocks/TurnBlock";
 import { ActionType } from "../types/actions";
 import GoToBlock from "./blocks/GoToBlock";
 import SayThinkBlock from "./blocks/SayThinkBlock";
+import RepeatBlock from "./blocks/RepeatBlock";
 
 interface ActionDrawerProps {
   open: boolean;
@@ -24,6 +25,9 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
   const [sayMessage, setSayMessage] = useState("Hello!");
   const [thinkMessage, setThinkMessage] = useState("Hmm...");
   const [bubbleDuration, setBubbleDuration] = useState(2);
+  const [repeatCount, setRepeatCount] = useState(3);
+  const [repeatValue, setRepeatValue] = useState(10);
+  const [repeatType, setRepeatType] = useState<"move" | "turn">("move");
 
   const actions = getActionsForSprite(selectedSpriteId);
 
@@ -52,6 +56,27 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
       type: "think",
       value: thinkMessage,
       duration: bubbleDuration,
+    });
+  };
+
+  const handleAddRepeat = () => {
+    if (!selectedSpriteId) return;
+
+    const repeatInner = { type: repeatType, value: repeatValue } as
+      | { type: "move"; value: number }
+      | { type: "turn"; value: number };
+
+    const repeatAction = {
+      type: "repeat",
+      count: repeatCount,
+      action: repeatInner,
+    } as ActionType;
+
+    addAction(selectedSpriteId, repeatAction);
+
+    // 🆕 Store repeat info in sprite for collision-based swap
+    updateSprite(selectedSpriteId, {
+      currentRepeat: repeatInner,
     });
   };
 
@@ -127,6 +152,16 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
           onMessageChange={setThinkMessage}
           onSecondsChange={setBubbleDuration}
           onRun={handleThink}
+        />
+
+        <RepeatBlock
+          count={repeatCount}
+          value={repeatValue}
+          type={repeatType}
+          onChangeCount={setRepeatCount}
+          onChangeValue={setRepeatValue}
+          onChangeType={setRepeatType}
+          onRun={handleAddRepeat}
         />
       </div>
 

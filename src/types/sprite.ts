@@ -10,6 +10,7 @@ export interface SpriteState {
   };
   animationQueue: AnimationType[];
   type?: "cat" | "ball";
+  currentRepeat?: { type: "move" | "turn"; value: number; count: number };
 }
 
 export type AnimationType =

@@ -7,6 +7,8 @@ import { SpriteState } from "../types/sprite";
 import { useSprites } from "../contexts/SpriteContext";
 import { useActionContext } from "../contexts/ActionContext";
 import { executeAction } from "../utils/executeAction";
+import { checkCollision } from "../utils/collisionUtils";
+import { ActionType } from "../types/actions";
 
 interface PreviewAreaProps {
   sprites: SpriteState[];
@@ -23,6 +25,10 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
   const { getActionsForSprite } = useActionContext();
   const previewRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [swappedActionMap, setSwappedActionMap] = useState<
+    Record<string, ActionType[]>
+  >({});
+  const [shouldReplaySwapped, setShouldReplaySwapped] = useState(false);
 
   const handleDrag = (e: React.MouseEvent, sprite: SpriteState) => {
     e.stopPropagation();
@@ -71,68 +77,73 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
 
   const playActions = async () => {
     if (!selectedSpriteId) return;
-    const sprite = sprites.find((s) => s.id === selectedSpriteId);
-    if (!sprite) return;
 
-    const actions = getActionsForSprite(selectedSpriteId);
+    // Step 1: Capture full original actions
+    let actionsMap = sprites.reduce((acc, sprite) => {
+      acc[sprite.id] = getActionsForSprite(sprite.id);
+      return acc;
+    }, {} as Record<string, ActionType[]>);
 
-    for (const action of actions) {
-      switch (action.type) {
-        case "move":
-        case "turn":
-        case "goTo": {
-          const updated = executeAction(sprite, action);
-          updateSprite(sprite.id, {
-            x: updated.x ?? sprite.x,
-            y: updated.y ?? sprite.y,
-            rotation: updated.rotation ?? sprite.rotation,
-          });
-          break;
-        }
+    const originalActionsMap = JSON.parse(JSON.stringify(actionsMap)); // full backup
 
-        case "say": {
-          updateSprite(sprite.id, {
-            bubble: { type: "say", text: action.value },
-          });
-          await new Promise((res) =>
-            setTimeout(res, (action.duration || 2) * 1000)
-          );
-          updateSprite(sprite.id, { bubble: null });
-          break;
-        }
+    const spriteMap = Object.fromEntries(sprites.map((s) => [s.id, { ...s }]));
 
-        case "think": {
-          updateSprite(sprite.id, {
-            bubble: { type: "think", text: action.value },
-          });
-          await new Promise((res) =>
-            setTimeout(res, (action.duration || 2) * 1000)
-          );
-          updateSprite(sprite.id, { bubble: null });
-          break;
-        }
+    let i = 0;
+    let maxLength = Math.max(...Object.values(actionsMap).map((a) => a.length));
+    let hasSwapped = false;
 
-        case "repeat": {
-          for (let i = 0; i < action.count; i++) {
-            const nested = { ...action.action };
-            const updated = executeAction(sprite, nested);
-            updateSprite(sprite.id, {
-              x: updated.x ?? sprite.x,
-              y: updated.y ?? sprite.y,
-              rotation: updated.rotation ?? sprite.rotation,
-            });
-            await new Promise((res) => setTimeout(res, 300));
-          }
-          break;
-        }
+    while (i < maxLength) {
+      for (const spriteId of Object.keys(actionsMap)) {
+        const sprite = spriteMap[spriteId];
+        const action = actionsMap[spriteId][i];
+        if (!action) continue;
 
-        default:
-          console.warn("Unknown action type", action);
+        const updated = executeAction(sprite, action);
+        spriteMap[spriteId] = { ...sprite, ...updated };
+        updateSprite(spriteId, updated);
       }
 
-      // short pause between all actions
+      // Collision check
+      const ids = Object.keys(spriteMap);
+      for (let a = 0; a < ids.length; a++) {
+        for (let b = a + 1; b < ids.length; b++) {
+          const sa = spriteMap[ids[a]];
+          const sb = spriteMap[ids[b]];
+
+          if (checkCollision(sa, sb) && !hasSwapped) {
+            console.log(
+              `%c🚨 Collision Detected Between: ${sa.name} and ${sb.name}`,
+              "background: #ff4757; color: white; padding: 4px;"
+            );
+
+            // Swap full action sequences
+            const temp = originalActionsMap[sa.id];
+            actionsMap[sa.id] = originalActionsMap[sb.id];
+            actionsMap[sb.id] = temp;
+
+            console.log(
+              `🔁 Fully Swapped action sequences between ${sa.name} and ${sb.name}`
+            );
+            console.log(`${sa.name} new actions:`, actionsMap[sa.id]);
+            console.log(`${sb.name} new actions:`, actionsMap[sb.id]);
+
+            // Reset loop to start over with swapped actions
+            i = -1;
+            maxLength = Math.max(
+              actionsMap[sa.id].length,
+              actionsMap[sb.id].length
+            );
+            hasSwapped = true;
+            break; // Exit loop to allow restart
+          }
+        }
+      }
+
       await new Promise((res) => setTimeout(res, 300));
+      i++;
     }
+
+    console.log("✅ Finished executing all (possibly swapped) actions.");
   };
 
   return (
