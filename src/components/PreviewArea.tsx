@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal, notification, Steps } from "antd";
 import CatSprite from "../svg/CatSprite";
 import BallSprite from "../svg/BallSprite";
 import ActionDrawer from "./ActionDrawer";
@@ -25,10 +25,7 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
   const { getActionsForSprite } = useActionContext();
   const previewRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [swappedActionMap, setSwappedActionMap] = useState<
-    Record<string, ActionType[]>
-  >({});
-  const [shouldReplaySwapped, setShouldReplaySwapped] = useState(false);
+  const [guideVisible, setGuideVisible] = useState(false);
 
   const handleDrag = (e: React.MouseEvent, sprite: SpriteState) => {
     e.stopPropagation();
@@ -98,9 +95,27 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
         const action = actionsMap[spriteId][i];
         if (!action) continue;
 
-        const updated = executeAction(sprite, action);
-        spriteMap[spriteId] = { ...sprite, ...updated };
-        updateSprite(spriteId, updated);
+        // const updated = executeAction(sprite, action);
+        // spriteMap[spriteId] = { ...sprite, ...updated };
+        // updateSprite(spriteId, updated);
+
+        if (action.type === "repeat") {
+          const repeat = action;
+          for (let r = 0; r < repeat.count; r++) {
+            const subAction = repeat.action;
+
+            const updated = executeAction(spriteMap[spriteId], subAction);
+            spriteMap[spriteId] = { ...spriteMap[spriteId], ...updated };
+            updateSprite(spriteId, updated);
+
+            // Small delay between each repeat step
+            await new Promise((res) => setTimeout(res, 50));
+          }
+        } else {
+          const updated = executeAction(sprite, action);
+          spriteMap[spriteId] = { ...sprite, ...updated };
+          updateSprite(spriteId, updated);
+        }
       }
 
       // Collision check
@@ -115,6 +130,14 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
               `%c🚨 Collision Detected Between: ${sa.name} and ${sb.name}`,
               "background: #ff4757; color: white; padding: 4px;"
             );
+
+            // 🔔 Show notification for 2 seconds
+            notification.open({
+              message: "🚨 Collision Detected!",
+              description: `${sa.name} and ${sb.name} collided. Actions will now be swapped.`,
+              duration: 2,
+              placement: "topRight",
+            });
 
             // Swap full action sequences
             const temp = originalActionsMap[sa.id];
@@ -225,18 +248,64 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
         ))}
 
         {/* Buttons */}
-        <div className="absolute bottom-10 right-10 flex gap-2">
+        <div className="absolute bottom-5 right-5 flex gap-2">
           <Button onClick={() => setDrawerOpen(true)}>
             Open Action Drawer
           </Button>
           <Button type="primary" onClick={playActions}>
             ▶ Play
           </Button>
+          <Button onClick={() => setGuideVisible(true)}>
+            Hero Feature Guide
+          </Button>
         </div>
       </div>
 
       {/* Drawer */}
       <ActionDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <Modal
+        title="Hero Feature Guide"
+        open={guideVisible}
+        onCancel={() => setGuideVisible(false)}
+        footer={null}
+      >
+        <Steps
+          direction="vertical"
+          size="small"
+          current={-1} // show all steps without highlighting current
+          items={[
+            { title: "Add 2 sprites using the sidebar" },
+            {
+              title:
+                "Open the Action Drawer using the 'Open Action Drawer' button",
+            },
+            {
+              title:
+                "Clear all existing actions for both sprites in the action stack, if any.",
+            },
+            {
+              title: "Select Sprite 1",
+              description:
+                "Add the following actions:\n- Go to (x: -80, y: 0)\n- Repeat 10 steps × 7 times",
+            },
+            {
+              title: "Select Sprite 2",
+              description:
+                "Add the following actions:\n- Go to (x: 80, y: 0)\n- Repeat -10 steps × 7 times",
+            },
+            {
+              title: "Click ▶ Play to start",
+              description:
+                "The two sprites will move toward each other and swap actions upon collision",
+            },
+            // {
+            //   title: "Observe the collision",
+            //   description:
+            //     "After colliding, each sprite continues with the other's animation.",
+            // },
+          ]}
+        />
+      </Modal>
     </div>
   );
 };

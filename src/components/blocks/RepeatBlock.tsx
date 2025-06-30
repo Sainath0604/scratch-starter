@@ -10,6 +10,7 @@ interface RepeatBlockProps {
   onChangeValue: (v: number) => void;
   onChangeType: (t: RepeatActionType) => void;
   onRun: () => void;
+  sumbmitBtnComponent?: "sidebar" | "action-drawer";
 }
 
 const RepeatBlock: React.FC<RepeatBlockProps> = ({
@@ -20,6 +21,7 @@ const RepeatBlock: React.FC<RepeatBlockProps> = ({
   onChangeValue,
   onChangeType,
   onRun,
+  sumbmitBtnComponent = "sidebar",
 }) => (
   <div className="bg-yellow-500 text-white p-2 my-2 text-sm rounded cursor-pointer">
     <div className="flex items-center mb-2">
@@ -44,7 +46,6 @@ const RepeatBlock: React.FC<RepeatBlockProps> = ({
         <option value="move">Move</option>
         <option value="turn">Turn</option>
       </select>
-
       <input
         type="number"
         value={value}
@@ -58,7 +59,7 @@ const RepeatBlock: React.FC<RepeatBlockProps> = ({
       onClick={onRun}
       className="mt-1 px-2 py-1 bg-yellow-700 hover:bg-yellow-800 rounded text-white text-xs"
     >
-      Run
+      {sumbmitBtnComponent === "sidebar" ? "Run" : "Add"}
     </button>
   </div>
 );

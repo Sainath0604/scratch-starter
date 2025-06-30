@@ -8,6 +8,7 @@ interface SayThinkBlockProps {
   onMessageChange: (val: string) => void;
   onSecondsChange: (val: number) => void;
   onRun: () => void;
+  sumbmitBtnComponent?: "sidebar" | "action-drawer";
 }
 
 const SayThinkBlock: React.FC<SayThinkBlockProps> = ({
@@ -17,6 +18,7 @@ const SayThinkBlock: React.FC<SayThinkBlockProps> = ({
   onMessageChange,
   onSecondsChange,
   onRun,
+  sumbmitBtnComponent = "sidebar",
 }) => {
   return (
     <div
@@ -49,7 +51,7 @@ const SayThinkBlock: React.FC<SayThinkBlockProps> = ({
         }}
         className="mt-1 self-start px-2 py-1 bg-purple-700 hover:bg-purple-800 text-white text-xs rounded"
       >
-        Run
+        {sumbmitBtnComponent === "sidebar" ? "Run" : "Add"}
       </button>
     </div>
   );

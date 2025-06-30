@@ -12,10 +12,11 @@ import SayThinkBlock from "./blocks/SayThinkBlock";
 const Sidebar: React.FC = () => {
   const [selectedType, setSelectedType] = useState<"cat" | "ball">("cat");
   const [moveSteps, setMoveSteps] = useState(10);
-  const [turnDeg, setTurnDeg] = useState(15);
+  const [turnDegLeft, setTurnDegLeft] = useState(15);
+  const [turnDegRight, setTurnDegRight] = useState(15);
   const [goToX, setGoToX] = useState(0);
   const [goToY, setGoToY] = useState(0);
-  const [repeatCount, setRepeatCount] = useState(3);
+  const [repeatCount, setRepeatCount] = useState(5);
   const [repeatValue, setRepeatValue] = useState(10);
   const [repeatType, setRepeatType] = useState<"move" | "turn">("move");
   const [sayMessage, setSayMessage] = useState("Hello!");
@@ -38,24 +39,31 @@ const Sidebar: React.FC = () => {
       y: update.y ?? selectedSprite.y,
       rotation: update.rotation ?? selectedSprite.rotation,
     });
-    addAction(selectedSpriteId, { type: "move", value: moveSteps });
+    // addAction(selectedSpriteId, { type: "move", value: moveSteps });
   };
 
   const handleTurn = (dir: "left" | "right") => {
-    const value = dir === "left" ? -turnDeg : turnDeg;
-    const update = executeAction(selectedSprite, { type: "turn", value });
+    const degrees = dir === "left" ? turnDegLeft : turnDegRight;
+    const value = dir === "left" ? -degrees : degrees;
+
+    const update = executeAction(selectedSprite, {
+      type: "turn",
+      value,
+    });
+
     updateSprite(selectedSpriteId, {
       rotation: update.rotation ?? selectedSprite.rotation,
     });
-    addAction(selectedSpriteId, { type: "turn", value });
+
+    // addAction(selectedSpriteId, { type: "turn", value });
   };
 
   const handleGoTo = () => {
     updateSprite(selectedSpriteId, { x: goToX, y: goToY });
-    addAction(selectedSpriteId, { type: "goTo", x: goToX, y: goToY });
+    // addAction(selectedSpriteId, { type: "goTo", x: goToX, y: goToY });
   };
 
-  const handleRepeat = () => {
+  const handleRepeat = async () => {
     if (!selectedSpriteId) return;
     const sprite = sprites.find((s) => s.id === selectedSpriteId);
     if (!sprite) return;
@@ -68,7 +76,7 @@ const Sidebar: React.FC = () => {
       // Execute action on current state
       const update = executeAction(updatedSprite, action);
 
-      // Update state for next iteration
+      // Update internal state for next iteration
       updatedSprite = {
         ...updatedSprite,
         x: update.x ?? updatedSprite.x,
@@ -76,15 +84,17 @@ const Sidebar: React.FC = () => {
         rotation: update.rotation ?? updatedSprite.rotation,
       };
 
-      // Apply to global state
+      // Animate the sprite visually
       updateSprite(selectedSpriteId, {
         x: updatedSprite.x,
         y: updatedSprite.y,
         rotation: updatedSprite.rotation,
       });
 
-      // Optional: add to queue (if you want playback later)
-      addAction(selectedSpriteId, action);
+      // addAction(selectedSpriteId, action);
+
+      //  Add visible delay for animation step
+      await new Promise((res) => setTimeout(res, 80));
     }
   };
 
@@ -157,15 +167,15 @@ const Sidebar: React.FC = () => {
       <TurnBlock
         label="Turn Left"
         iconName="undo"
-        degrees={turnDeg}
-        onChange={setTurnDeg}
+        degrees={turnDegLeft}
+        onChange={setTurnDegLeft}
         onClick={() => handleTurn("left")}
       />
       <TurnBlock
         label="Turn Right"
         iconName="redo"
-        degrees={turnDeg}
-        onChange={setTurnDeg}
+        degrees={turnDegRight}
+        onChange={setTurnDegRight}
         onClick={() => handleTurn("right")}
       />
 

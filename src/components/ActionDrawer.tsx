@@ -8,6 +8,7 @@ import { ActionType } from "../types/actions";
 import GoToBlock from "./blocks/GoToBlock";
 import SayThinkBlock from "./blocks/SayThinkBlock";
 import RepeatBlock from "./blocks/RepeatBlock";
+import { executeAction } from "../utils/executeAction";
 
 interface ActionDrawerProps {
   open: boolean;
@@ -19,7 +20,8 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
     useSprites();
   const { addAction, getActionsForSprite, clearActions } = useActionContext();
   const [moveSteps, setMoveSteps] = useState(10);
-  const [turnDeg, setTurnDeg] = useState(15);
+  const [turnDegLeft, setTurnDegLeft] = useState(15);
+  const [turnDegRight, setTurnDegRight] = useState(15);
   const [goToX, setGoToX] = useState(0);
   const [goToY, setGoToY] = useState(0);
   const [sayMessage, setSayMessage] = useState("Hello!");
@@ -84,7 +86,7 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
     <Drawer
       title="Assign Actions"
       placement="right"
-      width={400}
+      width={900}
       onClose={onClose}
       open={open}
     >
@@ -104,107 +106,137 @@ const ActionDrawer: React.FC<ActionDrawerProps> = ({ open, onClose }) => {
         </Select>
       </div>
 
-      {/* Action Blocks */}
-      <div className="space-y-2">
-        <MoveBlock
-          steps={moveSteps}
-          onChange={setMoveSteps}
-          onClick={() => handleAddAction({ type: "move", value: moveSteps })}
-        />
+      {/* Two-column layout: Action Blocks & Action Stack */}
+      <div className="flex gap-4 h-[600px]">
+        {/* Left Column: Action Blocks */}
+        <div className="w-1/2 space-y-4 overflow-auto">
+          <MoveBlock
+            steps={moveSteps}
+            onChange={setMoveSteps}
+            onClick={() => handleAddAction({ type: "move", value: moveSteps })}
+          />
 
-        <TurnBlock
-          label="Turn Left"
-          iconName="undo"
-          degrees={turnDeg}
-          onChange={setTurnDeg}
-          onClick={() => handleAddAction({ type: "turn", value: -turnDeg })}
-        />
-
-        <TurnBlock
-          label="Turn Right"
-          iconName="redo"
-          degrees={turnDeg}
-          onChange={setTurnDeg}
-          onClick={() => handleAddAction({ type: "turn", value: turnDeg })}
-        />
-
-        <GoToBlock
-          x={goToX}
-          y={goToY}
-          onChangeX={setGoToX}
-          onChangeY={setGoToY}
-          onClick={handleGoTo}
-        />
-
-        <SayThinkBlock
-          type="say"
-          message={sayMessage}
-          seconds={bubbleDuration}
-          onMessageChange={setSayMessage}
-          onSecondsChange={setBubbleDuration}
-          onRun={handleSay}
-        />
-
-        <SayThinkBlock
-          type="think"
-          message={thinkMessage}
-          seconds={bubbleDuration}
-          onMessageChange={setThinkMessage}
-          onSecondsChange={setBubbleDuration}
-          onRun={handleThink}
-        />
-
-        <RepeatBlock
-          count={repeatCount}
-          value={repeatValue}
-          type={repeatType}
-          onChangeCount={setRepeatCount}
-          onChangeValue={setRepeatValue}
-          onChangeType={setRepeatType}
-          onRun={handleAddRepeat}
-        />
-      </div>
-
-      {/* Current Action Stack */}
-      <div className="mt-6">
-        <h4 className="font-semibold mb-2">Action Stack:</h4>
-        <ul className="list-disc list-inside text-sm">
-          {actions.map((a, i) => {
-            switch (a.type) {
-              case "move":
-                return <li key={i}>Move {a.value} steps</li>;
-              case "turn":
-                return <li key={i}>Turn {a.value}°</li>;
-              case "goTo":
-                return (
-                  <li key={i}>
-                    Go to ({a.x}, {a.y})
-                  </li>
-                );
-              case "say":
-                return <li key={i}>Say "{a.value}"</li>;
-              case "think":
-                return <li key={i}>Think "{a.value}"</li>;
-              case "repeat":
-                return (
-                  <li key={i}>
-                    Repeat {a.count} × [{a.action.type}]
-                  </li>
-                );
-              default:
-                return null;
+          <TurnBlock
+            label="Turn Left"
+            iconName="undo"
+            degrees={turnDegLeft}
+            onChange={setTurnDegLeft}
+            onClick={() =>
+              handleAddAction({ type: "turn", value: -turnDegLeft })
             }
-          })}
-        </ul>
+          />
 
-        <Button
-          danger
-          size="small"
-          onClick={() => clearActions(selectedSpriteId || "")}
-          className="mt-2"
-        >
-          Clear Actions
-        </Button>
+          <TurnBlock
+            label="Turn Right"
+            iconName="redo"
+            degrees={turnDegRight}
+            onChange={setTurnDegRight}
+            onClick={() =>
+              handleAddAction({ type: "turn", value: turnDegRight })
+            }
+          />
+
+          <GoToBlock
+            x={goToX}
+            y={goToY}
+            onChangeX={setGoToX}
+            onChangeY={setGoToY}
+            onClick={handleGoTo}
+          />
+
+          <SayThinkBlock
+            type="say"
+            message={sayMessage}
+            seconds={bubbleDuration}
+            onMessageChange={setSayMessage}
+            onSecondsChange={setBubbleDuration}
+            onRun={handleSay}
+            sumbmitBtnComponent={"action-drawer"}
+          />
+
+          <SayThinkBlock
+            type="think"
+            message={thinkMessage}
+            seconds={bubbleDuration}
+            onMessageChange={setThinkMessage}
+            onSecondsChange={setBubbleDuration}
+            onRun={handleThink}
+            sumbmitBtnComponent={"action-drawer"}
+          />
+
+          <RepeatBlock
+            count={repeatCount}
+            value={repeatValue}
+            type={repeatType}
+            onChangeCount={setRepeatCount}
+            onChangeValue={setRepeatValue}
+            onChangeType={setRepeatType}
+            onRun={handleAddRepeat}
+            sumbmitBtnComponent={"action-drawer"}
+          />
+        </div>
+
+        {/* Right Column: Action Stack */}
+        <div className="w-1/2 flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold">Action Stack:</h4>
+            <Button
+              danger
+              size="small"
+              onClick={() => clearActions(selectedSpriteId || "")}
+            >
+              Clear All
+            </Button>
+          </div>
+
+          <div
+            className="flex-1 overflow-y-auto border p-2 rounded bg-gray-50"
+            style={{ maxHeight: "500px" }}
+          >
+            <ul className="space-y-2 text-sm">
+              {actions.map((a, i) => (
+                <li key={i} className="flex justify-between items-center">
+                  <span>
+                    {a.type === "move" && `Move ${a.value} steps`}
+                    {a.type === "turn" &&
+                      `Turn ${a.value < 0 ? "Left" : "Right"} ${Math.abs(
+                        a.value
+                      )}°`}
+                    {a.type === "goTo" && `Go to (x :${a.x}, y :${a.y})`}
+                    {a.type === "say" && `Say "${a.value}"`}
+                    {a.type === "think" && `Think "${a.value}"`}
+                    {a.type === "repeat" &&
+                      (() => {
+                        const inner = a.action;
+                        if (inner.type === "move" || inner.type === "turn") {
+                          return `Repeat ${a.count} × ${inner.value} ${
+                            inner.type === "move" ? "steps" : "degrees"
+                          }`;
+                        }
+                        return `Repeat ${a.count} × [${inner.type}]`;
+                      })()}
+                  </span>
+                  <Button
+                    danger
+                    size="small"
+                    type="text"
+                    onClick={() => {
+                      if (!selectedSpriteId) return;
+                      const newActions = [...actions];
+                      newActions.splice(i, 1);
+                      clearActions(selectedSpriteId);
+                      newActions.forEach((act) =>
+                        addAction(selectedSpriteId, act)
+                      );
+                    }}
+                  >
+                    ❌
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </Drawer>
   );
