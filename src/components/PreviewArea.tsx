@@ -264,6 +264,7 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
       {/* Drawer */}
       <ActionDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <Modal
+        width={800}
         title="Hero Feature Guide"
         open={guideVisible}
         onCancel={() => setGuideVisible(false)}
@@ -305,6 +306,16 @@ const PreviewArea: React.FC<PreviewAreaProps> = ({
             // },
           ]}
         />
+        <div className="mt-4 text-sm text-gray-600">
+          <strong>Note:</strong> The example actions used here —{" "}
+          <code>Go to (x: -80, y: 0)</code> and{" "}
+          <code>Repeat 10 steps × 7 times</code> for Sprite 1, and{" "}
+          <code>Go to (x: 80, y: 0)</code> and{" "}
+          <code>Repeat -10 steps × 7 times</code> for Sprite 2 — are just sample
+          values to demonstrate collision. You can use different values as long
+          as the sprites move toward each other and eventually collide, which
+          triggers the action swap.
+        </div>
       </Modal>
     </div>
   );
